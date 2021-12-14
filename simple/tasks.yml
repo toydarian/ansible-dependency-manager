@@ -1,0 +1,22 @@
+---
+- name: ensure roles-directory exists
+  file:
+    path: "{{ role_deps.roles_dir | default('roles/') }}"
+    state: directory
+
+- name: ensure roles are up-2-date
+  git:
+    dest: "roles/{{ item.name }}"
+    repo: "{{ item.repo }}"
+    force: "{{ item.force | default('no') }}"
+    accept_hostkey: "{{ role_deps.accept_hostkey | default('no') }}"
+    version: "{{ item.version | default('master') }}"
+  loop: "{{ role_deps.roles }}"
+  register: role_pulls
+
+- name: fail if roles changed
+  fail:
+    msg: "Failing, as some roles changed and `role_deps.fail_when_changed` is `true`."
+  when:
+    - role_pulls.changed
+    - role_deps.fail_when_changed | default(False) | bool
