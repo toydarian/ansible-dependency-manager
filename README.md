@@ -29,3 +29,5 @@ To try it, create a file called `test.yml` in this directory with the following 
 ```
 Then run `ansible-playbook test.yml`. When it finished, you should find a directory called `roles/` that contains the specified repository in a directory called `postgres`.  
 For documentation on all options, check [docs/simple.md](docs/simple.md)
+
+If you use tags, you might want to add the `always`-tag to the include, to make sure it is not skipped accidentially. All tasks in `simple/tasks.yml` are tagged `always` and `role_deps`.

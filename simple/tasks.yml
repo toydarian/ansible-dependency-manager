@@ -3,6 +3,9 @@
   file:
     path: "{{ role_deps.roles_dir | default('roles/') }}"
     state: directory
+  tags:
+    - always
+    - role_deps
 
 - name: ensure roles are up-2-date
   git:
@@ -13,6 +16,9 @@
     version: "{{ item.version | default('master') }}"
   loop: "{{ role_deps.roles }}"
   register: role_pulls
+  tags:
+    - always
+    - role_deps
 
 - name: fail if roles changed
   fail:
@@ -20,3 +26,6 @@
   when:
     - role_pulls.changed
     - role_deps.fail_when_changed | default(False) | bool
+  tags:
+    - always
+    - role_deps
