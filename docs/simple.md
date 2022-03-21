@@ -19,20 +19,20 @@ role_deps:
     - name: postgres
       repo: "https://github.com/geerlingguy/ansible-role-postgresql.git"
       version: "3.2.0"
-      force: yes
 ```
 
 Explanation:
 
- - `accept_hostkeys`: skips the hostkey-check if set to `yes` (default: `no`)
+ - `accept_hostkeys`: skips the hostkey-check if set to `yes`. Can be set globally and overridden on each role (default: `no`)
  - `roles_dir`: where to store the roles (default: `roles/`)  
    If you change that, you need to make sure that the directory is in the search-path yourself!
+ - `default_role_loc`: if set, you can omit `repo` in the role, the repo will then be constructed as `default_role_loc + name + '.git'`
  - `fail_when_changed`: Fail after pulling all roles if at least one of them changed. See [Limitations](#limitations) for more information. (default: `false`)
+ - `allow_local_modification`: if set to `true`, the process will not fail if a repository can't be updated because of local changes. You might want to set this to `true` in dev and `false` in prod (default: `false`)
  - `roles`: a list of roles to manage (required)
  - `roles[*].name`: the name of the directory in `roles` where the role is stored (required)
- - `roles[*].repo`: the repository where the role is managed (required)
+ - `roles[*].repo`: the repository where the role is managed (required if `default_role_loc` is not defined)
  - `roles[*].version`: version (tag/branch/hash) to check out (default: `master`)
- - `roles[*].force`: overwrite locally changed files in the role (default: `no`)
 
 What Happens
 ------------

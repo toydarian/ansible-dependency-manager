@@ -1,4 +1,5 @@
 ---
+# https://github.com/toydarian/ansible-dependency-manager
 - name: ensure roles-directory exists
   file:
     path: "{{ role_deps.roles_dir | default('roles/') }}"
@@ -10,12 +11,15 @@
 - name: ensure roles are up-2-date
   git:
     dest: "roles/{{ item.name }}"
-    repo: "{{ item.repo }}"
-    force: "{{ item.force | default('no') }}"
-    accept_hostkey: "{{ role_deps.accept_hostkey | default('no') }}"
+    repo: "{{ item.repo | default(role_deps.default_role_loc + item.name + '.git') }}"
+    force: no
+    accept_hostkey: "{{ item.accept_hostkey | default(role_deps.accept_hostkey) | default('no') }}"
     version: "{{ item.version | default('master') }}"
   loop: "{{ role_deps.roles }}"
   register: role_pulls
+  failed_when:
+    - role_pulls.failed
+    - not (role_deps.allow_local_modifications | default('false') | bool) or role_pulls.msg != "Local modifications exist in repository (force=no)."
   tags:
     - always
     - role_deps
@@ -25,7 +29,25 @@
     msg: "Failing, as some roles changed and `role_deps.fail_when_changed` is `true`."
   when:
     - role_pulls.changed
-    - role_deps.fail_when_changed | default(False) | bool
+    - role_deps.fail_when_changed | default('false') | bool
+  tags:
+    - always
+    - role_deps
+
+- name: check for local modifications
+  block:
+    - set_fact:
+        local_mods: "{{ local_mods | default('') }} {{ item.item.name }}"
+      loop: "{{ role_pulls.results }}"
+      no_log: true
+      when:
+        - '"msg" in item'
+        - not item.msg != "Local modifications exist in repository (force=no)."
+
+    - debug:
+        msg: "There are local modifications in the following repos:{{ local_mods }}"
+      when: (local_mods | default('')) != ""
+  when: role_deps.allow_local_modifications | default('false') | bool
   tags:
     - always
     - role_deps
